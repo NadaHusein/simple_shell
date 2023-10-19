@@ -37,7 +37,7 @@ int _strcmp(char *s1, char *s2)
 	return (cmp);
 }
 
-int _strlen(char *s2)
+int _strlen(char *s)
 {
 	int len = 0;
 
@@ -70,4 +70,6 @@ char *_strcpy(char *dest, char *src)
 		dest[i] = src[i];
 		i++;
 	}
+	dest[i] = 0;
+	return (dest);
 }
