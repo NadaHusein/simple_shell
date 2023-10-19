@@ -1,91 +1,77 @@
-#include "Shell.h"
-/**
- * _myenv - prints the current environment
- * @info: Structure containing potential arguments. Used to maintain
- *          constant function prototype.
- * Return: Always 0
- */
-int myenv(args_t *info)
-{
-	print_list_str(info->env);
-	return (0);
-}
+
+
+#include "shell.h"
+
+char **_copyenv(void);
+void free_env(void);
+char **_getenv(const char *var);
 
 /**
- * _getenv - gets the value of an environ variable
- * @info: Structure containing potential arguments. Used to maintain
- * @name: env var name
+ * _copyenv - Creates a copy of the environment.
  *
- * Return: the value
+ * Return: If an error occurs - NULL.
+ *         O/w - a double pointer to the new copy.
  */
-char *_getenv(args_t *info, const char *name)
+char **_copyenv(void)
 {
-	list_t *node = info->env;
-	char *p;
+  char **new_environ;
+  size_t size;
+  int index;
 
-	while (node)
+  for (size = 0; environ[size]; size++)
+    ;
+
+  new_environ = malloc(sizeof(char *) * (size + 1));
+  if (!new_environ)
+    return (NULL);
+
+  for (index = 0; environ[index]; index++)
+    {
+      new_environ[index] = malloc(_strlen(environ[index]) + 1);
+
+      if (!new_environ[index])
 	{
-		p = starts_with(node->str, name);
-		if (p && *p)
-			return (p);
-		node = node->next;
+	  for (index--; index >= 0; index--)
+	    free(new_environ[index]);
+	  free(new_environ);
+	  return (NULL);
 	}
-	return (NULL);
+      _strcpy(new_environ[index], environ[index]);
+    }
+  new_environ[index] = NULL;
+
+  return (new_environ);
 }
 
 /**
- * setenv - Initialize a new environment variable,
- *             or modify an existing one
- * @info: Structure containing potential arguments. Used to maintain
- *        constant function prototype.
- *  Return: Always 0
+ * free_env - Frees the the environment copy.
  */
-int setenv(args_t *info)
+void free_env(void)
 {
-	if (info->argc != 3)
-	{
-		_eputs("Incorrect number of arguements\n");
-		return (1);
-	}
-	if (_setenv(info, info->argv[1], info->argv[2]))
-		return (0);
-	return (1);
+  int index;
+
+  for (index = 0; environ[index]; index++)
+    free(environ[index]);
+  free(environ);
 }
 
 /**
- * unsetenv - Remove an environment variable
- * @info: Structure containing potential arguments. Used to maintain
- *        constant function prototype.
- *  Return: Always 0
+ * _getenv - Gets an environmental variable from the PATH.
+ * @var: The name of the environmental variable to get.
+ *
+ * Return: If the environmental variable does not exist - NULL.
+ *         Otherwise - a pointer to the environmental variable.
  */
-int unsetenv(args_t *info)
+char **_getenv(const char *var)
 {
-	int i;
+  int index, len;
 
-	if (info->argc == 1)
-	{
-		_eputs("Too few arguements.\n");
-		return (1);
-	}
-	for (i = 1; i <= info->argc; i++)
-		_unsetenv(info, info->argv[i]);
+  len = _strlen(var);
+  for (index = 0; environ[index]; index++)
+    {
+      if (_strncmp(var, environ[index], len) == 0)
+	return (&environ[index]);
+    }
 
-	return (0);
-}
-
-/**
- * populate_env_list - populates env linked list
- * @info: Structure containing potential arguments. Used to maintain
- *          constant function prototype.
- * Return: Always 0
- */
-int populate_env_list(args_t *info)
-{
-	list_t *node = NULL;
-	size_t i;
-
-	for (i = 0; environ[i]; i++)
-		add_node_end(&node, environ[i], 0);
-	info->env = node;
-	return (0);
+  return (NULL);
 }
